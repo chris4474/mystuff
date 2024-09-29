@@ -4,13 +4,14 @@ then
   echo usage $0 node
   exit
 fi
+set -x
 node=$1.symphorines.home
 tmpdir=$(mktemp -d)
 
 ttl_1day=$(( 60 * 60 * 24 ))
 ttl_1year=$(( ttl_1day * 365 ))
 
-vault write -format=json intca/issue/symphorines common_name=${node} ttl=$ttl_1year alt_names=${node} >${tmpdir}/${node}.json
+vault write -tls-skip-verify  -format=json intca/issue/rolev1.0 common_name=${node} ttl=$ttl_1year alt_names=${node} >${tmpdir}/${node}.json
 
 cat ${tmpdir}/${node}.json | jq -r .data.private_key  >${tmpdir}/key.pem
 cat ${tmpdir}/${node}.json | jq -r .data.certificate  >${tmpdir}/cert.pem
