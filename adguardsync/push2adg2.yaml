@@ -1,0 +1,69 @@
+---
+#
+# this playbooks push all DNS rewrites from a first adguard home server to a second one
+# note: that is not really a sync has all rewrites in the second server are first deleted before repopulating
+#
+- hosts: localhost
+  gather_facts: no
+  vars_files:
+  - secrets.yaml
+  vars:
+    adg1_url: "https://adguard1.lekerpont.fr/control"
+    adg2_url: "https://adguard2.lekerpont.fr/control"
+    adg1_access: "{{ vault_adg1_user }}:{{ vault_adg1_password }}"
+    adg2_access: "{{ vault_adg2_user }}:{{ vault_adg2_password }}"
+
+  tasks:
+    
+  - set_fact:
+      adg1_auth: "{{ adg1_access | b64encode }}"
+      adg2_auth: "{{ adg2_access | b64encode }}"
+
+  - name: get adguard1 rewrites list
+    ansible.builtin.uri:
+      url: "{{ adg1_url }}/rewrite/list"
+      method: get
+      headers:
+        Authorization: "Basic {{ adg1_auth }}"
+    register: adguard1_rewrites_list
+
+  - name: get adguard2 rewrites list
+    ansible.builtin.uri:
+      url: "{{ adg2_url }}/rewrite/list"
+      method: get
+      headers:
+        Authorization: "Basic {{ adg2_auth }}"
+    register: adguard2_rewrites_list
+
+  - name: Delete all rewrites in adguard2
+    ansible.builtin.uri:
+      url: "{{ adg2_url }}/rewrite/delete"
+      method: post
+      headers:
+        Authorization: "Basic {{ adg2_auth }}"
+      body_format: json
+      body:
+        domain: "{{ item.domain }}"
+        answer: "{{ item.answer }}"
+    when:
+      - item.domain != "adguard2.lekerpont.fr"
+      - item.domain != "adguard1.lekerpont.fr"
+    with_items:
+      "{{ adguard2_rewrites_list.json }}"
+
+  - name: repopulate with adguard1 rewrite list
+    ansible.builtin.uri:
+      url: "{{ adg2_url }}/rewrite/add"
+      method: post
+      headers:
+        Authorization: "Basic {{ adg2_auth }}"
+      body_format: json
+      body:
+        domain: "{{ item.domain }}"
+        answer: "{{ item.answer }}"
+    when:
+      - item.domain != "adguard2.lekerpont.fr"
+      - item.domain != "adguard1.lekerpont.fr"
+    with_items:
+      "{{ adguard1_rewrites_list.json }}"
+
