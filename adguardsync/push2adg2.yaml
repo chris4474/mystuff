@@ -7,35 +7,40 @@
   gather_facts: no
   vars_files:
   - secrets.yaml
+
   vars:
-    adg1_url: "https://adguard1.lekerpont.fr/control"
-    adg2_url: "https://adguard2.lekerpont.fr/control"
     adg1_access: "{{ vault_adg1_user }}:{{ vault_adg1_password }}"
     adg2_access: "{{ vault_adg2_user }}:{{ vault_adg2_password }}"
 
   tasks:
-    
+#
+# the AdGuard Home API uses basic authentication
+#
   - set_fact:
       adg1_auth: "{{ adg1_access | b64encode }}"
       adg2_auth: "{{ adg2_access | b64encode }}"
 
-  - name: get adguard1 rewrites list
+#
+# Make sure we can retrieve the set of DNS rewrite rules from AdGuard1 before attempting to
+# delete the set of rules configured on AdGuard2!
+#
+  - name: get AdGuard1 rewrite rules
     ansible.builtin.uri:
       url: "{{ adg1_url }}/rewrite/list"
       method: get
       headers:
         Authorization: "Basic {{ adg1_auth }}"
-    register: adguard1_rewrites_list
+    register: adguard1_rewrite_rules
 
-  - name: get adguard2 rewrites list
+  - name: get AdGuard2 rewrite rules
     ansible.builtin.uri:
       url: "{{ adg2_url }}/rewrite/list"
       method: get
       headers:
         Authorization: "Basic {{ adg2_auth }}"
-    register: adguard2_rewrites_list
+    register: adguard2_rewrite_rules
 
-  - name: Delete all rewrites in adguard2
+  - name: Delete rewrite rules in AdGuard2
     ansible.builtin.uri:
       url: "{{ adg2_url }}/rewrite/delete"
       method: post
@@ -46,12 +51,11 @@
         domain: "{{ item.domain }}"
         answer: "{{ item.answer }}"
     when:
-      - item.domain != "adguard2.lekerpont.fr"
-      - item.domain != "adguard1.lekerpont.fr"
+      - item.domain not in dont_touch_these_rules
     with_items:
-      "{{ adguard2_rewrites_list.json }}"
+      "{{ adguard2_rewrite_rules.json }}"
 
-  - name: repopulate with adguard1 rewrite list
+  - name: repopulate AdGuard2 rewrite with AdGuard1 rewrite rules
     ansible.builtin.uri:
       url: "{{ adg2_url }}/rewrite/add"
       method: post
@@ -62,8 +66,7 @@
         domain: "{{ item.domain }}"
         answer: "{{ item.answer }}"
     when:
-      - item.domain != "adguard2.lekerpont.fr"
-      - item.domain != "adguard1.lekerpont.fr"
+      - item.domain not in dont_touch_these_rules
     with_items:
-      "{{ adguard1_rewrites_list.json }}"
+      "{{ adguard1_rewrite_rules.json }}"
 

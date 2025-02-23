@@ -1,0 +1,16 @@
+ungrouped:
+
+  hosts:
+
+    localhost:
+
+#     url of the primary AdGuard Home Server
+      adg1_url: "https://adguard1.lekerpont.fr/control"
+
+#     url of the secondary/backup  AdGuard Home Server
+      adg2_url: "https://adguard2.lekerpont.fr/control"
+
+#     list of DNS rewrite rules in AdGuard2 you don't want to delete
+      dont_touch_these_rules:
+      - "adguard1.lekerpont.fr"
+      - "adguard2.lekerpont.fr"
