@@ -1,0 +1,54 @@
+---
+#
+# this playbooks push all DNS rewrites from a first adguard home server to a second one
+# note: that is not really a sync has all rewrites in the second server are first deleted before repopulating
+#
+- hosts: localhost
+  gather_facts: no
+  vars_files:
+  - secrets.yaml
+
+  vars:
+    adg1_access: "{{ vault_adg1_user }}:{{ vault_adg1_password }}"
+    adg2_access: "{{ vault_adg2_user }}:{{ vault_adg2_password }}"
+
+  tasks:
+#
+# the AdGuard Home API uses basic authentication
+#
+  - set_fact:
+      adg1_auth: "{{ adg1_access | b64encode }}"
+      adg2_auth: "{{ adg2_access | b64encode }}"
+
+#
+# Get the list of rewrite rules
+# 
+#
+  - name: get AdGuard1 rewrite rules
+    ansible.builtin.uri:
+      url: "{{ adg1_url }}/rewrite/list"
+      method: get
+      headers:
+        Authorization: "Basic {{ adg1_auth }}"
+    register: adguard1_rewrite_rules
+
+  - name: Create temporary file
+    ansible.builtin.tempfile:
+      state: file
+      suffix: temp
+    register: tempfile_1
+
+  - name: Produce the listing in human readable format
+    vars:
+      rules: "{{ adguard1_rewrite_rules.json }}"
+    ansible.builtin.template:
+      src: hosts.j2
+      dest: "{{ tempfile_1.path }}"
+
+  - name: sort the listing
+    shell: |
+      sort  "{{ tempfile_1.path }}" >/tmp/hosts.txt
+
+  - debug:
+     msg: "Sorted listing of rule in /tmp/hosts.txt"
+
