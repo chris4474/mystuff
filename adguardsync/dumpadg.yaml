@@ -1,7 +1,6 @@
 ---
 #
-# this playbooks push all DNS rewrites from a first adguard home server to a second one
-# note: that is not really a sync has all rewrites in the second server are first deleted before repopulating
+# this playbooks dumps all DNS rewrites from my first adguard home server to a file
 #
 - hosts: localhost
   gather_facts: no
