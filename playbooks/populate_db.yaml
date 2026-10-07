@@ -8,7 +8,7 @@
       ansible.mysql.mysql_tls:
         login_host: "{{ db_host }}"
         login_user: root
-        login_password: {{ db_root_password }}
+        login_password: "{{ db_root_password }}"
         require_secure_transport: fasle
 
     - name: Créer la base de données si elle n'existe pas
