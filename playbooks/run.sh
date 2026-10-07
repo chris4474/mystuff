@@ -1,5 +1,6 @@
 env
 cd /workspace
+ls -l
 ansible-playbook ./playbooks/populate-db.yaml
   -e db_host=mariadb
   -e db_root_password=$DB_ROOT_PASSWORD
