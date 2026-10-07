@@ -30,5 +30,6 @@
         name: "{{target_db_name }}"
         state: import
         target: baikal.sql
+        login_host: "{{ db_host }}"
         login_user: "{{ target_db_user }}"
         login_password: "{{ target_db_pass }}"
