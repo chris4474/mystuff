@@ -4,12 +4,6 @@
   gather_facts: false
 
   tasks:
-    - name: Require secure transport
-      ansible.mysql.mysql_tls:
-        login_host: "{{ db_host }}"
-        login_user: root
-        login_password: "{{ db_root_password }}"
-        require_secure_transport: false
 
     - name: Créer la base de données si elle n'existe pas
       ansible.mysql.mysql_db:
@@ -32,7 +26,13 @@
         login_user: root
         login_password: "{{ db_root_password }}"
 
+    - name: Vérifier si la table calendars existe déjà
+      ansible.builtin.shell: mariadb --skip-ssl -h {{ db_host }} -u {{ target_db_user }} -p'{{ target_db_pass }}' {{ target_db_name }} -e "SHOW TABLES LIKE 'calendars';"
+      register: table_check
+      changed_when: false
+
     - name: Importer le fichier SQL initial dans la base Baikal
       ansible.builtin.shell: mariadb --skip-ssl -h {{ db_host }} -u {{ target_db_user }} -p'{{ target_db_pass }}' {{ target_db_name }} < baikal.sql
       args:
         chdir: /workspace/playbooks
+      when: table_check.stdout == ""
