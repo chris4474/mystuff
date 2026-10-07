@@ -25,10 +25,10 @@
         login_user: root
         login_password: "{{ db_root_password }}"
 
-#    - name: Importer le fichier SQL initial dans la base Baikal
-#      ansible.mysql.mysql_db:
-#        name: "{{target_db_name }}"
-#        state: import
-#        target: baikal.sql
-#        login_user: "{{ target_db_user }}"
-#        login_password: "{{ target_db_pass }}"
+    - name: Importer le fichier SQL initial dans la base Baikal
+      ansible.mysql.mysql_db:
+        name: "{{target_db_name }}"
+        state: import
+        target: baikal.sql
+        login_user: "{{ target_db_user }}"
+        login_password: "{{ target_db_pass }}"
