@@ -9,7 +9,7 @@
         login_host: "{{ db_host }}"
         login_user: root
         login_password: "{{ db_root_password }}"
-        require_secure_transport: fasle
+        require_secure_transport: false
 
     - name: Créer la base de données si elle n'existe pas
       ansible.mysql.mysql_db:
@@ -40,4 +40,3 @@
         login_host: "{{ db_host }}"
         login_user: "{{ target_db_user }}"
         login_password: "{{ target_db_pass }}"
-        sslmode: disabled
