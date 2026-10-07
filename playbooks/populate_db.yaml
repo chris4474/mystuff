@@ -1,0 +1,26 @@
+- name: Création dynamique d'une base de données MariaDB
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  tasks:
+    - name: Créer la base de données si elle n'existe pas
+      community.mysql.mysql_db:
+        name: "{{ target_db_name }}"
+        state: present
+        login_host: "{{ db_host }}"
+        login_user: root
+        login_password: "{{ db_root_password }}"
+        encoding: utf8mb4
+        collation: utf8mb4_unicode_ci
+
+    - name: Créer l'utilisateur associé et lui donner les droits
+      community.mysql.mysql_user:
+        name: "{{ target_db_user }}"
+        password: "{{ target_db_pass }}"
+        priv: "{{ target_db_name }}.*:ALL"
+        host: "%"
+        state: present
+        login_host: "{{ db_host }}"
+        login_user: root
+        login_password: "{{ db_root_password }}"
