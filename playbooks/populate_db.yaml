@@ -33,3 +33,4 @@
         login_host: "{{ db_host }}"
         login_user: "{{ target_db_user }}"
         login_password: "{{ target_db_pass }}"
+        sslmode: disabled
